@@ -4,6 +4,15 @@ import time
 def solve_backtracking(adj, k, params=None):
     """
     Backtracking graph coloring with MRV + Forward Checking.
+
+    :param adj: dict {node: [neighbors]}
+    :param k:   maximum number of colors
+    :param params: (unused for now, kept for consistency)
+    :return: dict with keys:
+             - "coloring": {node: color} or None if no solution
+             - "nodes_explored": int
+             - "backtracks": int
+             - "time_ms": float (milliseconds)
     """
 
     n = len(adj)
@@ -62,14 +71,16 @@ def solve_backtracking(adj, k, params=None):
     def backtrack():
         nonlocal nodes_explored, backtracks
 
-        # Base case: solved
-        if all(colors[i] != -1 for i in range(n]):
+        # Base case: all nodes colored
+        if all(colors[i] != -1 for i in range(n)):
             return True
 
         nodes_explored += 1
 
         # Select variable using MRV
         node = select_mrv_node()
+        if node is None:
+            return True  # should not really happen if base case above holds
 
         # Try colors in the node domain
         for color in list(domains[node]):
