@@ -61,7 +61,7 @@ def main():
         writer.writerow(["n", "algorithm", "colors", "conflicts", "time_ms"])
 
         for n in sizes:
-            adj = generate_random_graph(n, p, seed=42)
+            adj = generate_random_graph(n, p)
             rows = run_one_test(adj, k)
 
             for (alg, colors, conflicts, ms) in rows:
