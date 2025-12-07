@@ -14,6 +14,13 @@ def solve_backtracking(adj, k, params=None):
              - "backtracks": int
              - "time_ms": float (milliseconds)
     """
+    
+    # Parameter Handling 
+    if params is None:
+        params = {}
+
+    use_dh = params.get("use_degree_heuristic", False)
+    use_lcv = params.get("use_lcv", False)
 
     n = len(adj)
     colors = [-1] * n  # -1 = uncolored
@@ -33,14 +40,22 @@ def solve_backtracking(adj, k, params=None):
 
     def select_mrv_node():
         """
-        Select the uncolored node with the smallest domain size (MRV).
+        MRV: select the uncolored node with the fewest legal values.
+        If MRV ties and use_dh is True -> apply Degree Heuristic.
         """
         uncolored = [i for i in range(n) if colors[i] == -1]
         if not uncolored:
             return None
 
-        # MRV = choose node with minimum domain size
-        return min(uncolored, key=lambda node: len(domains[node]))
+        # Step 1: MRV selection
+        min_domain = min(len(domains[node]) for node in uncolored)
+        candidates = [node for node in uncolored if len(domains[node]) == min_domain]
+
+        # Step 2: DH tie-breaker
+        if use_dh and len(candidates) > 1:
+            return max(candidates, key=lambda node: len(adj[node]))
+
+        return candidates[0]
 
     def forward_check(node, color):
         """
@@ -82,8 +97,23 @@ def solve_backtracking(adj, k, params=None):
         if node is None:
             return True  # should not really happen if base case above holds
 
-        # Try colors in the node domain
-        for color in list(domains[node]):
+
+        # Choose color order
+        colors_to_try = list(domains[node])
+
+        if use_lcv:
+            # Sort colors by how few constraints they impose (LCV)
+            def lcv_score(color):
+                score = 0
+                for neigh in adj[node]:
+                    if colors[neigh] == -1 and color in domains[neigh]:
+                        score += 1
+                return score
+
+            colors_to_try.sort(key=lcv_score)
+
+        for color in colors_to_try:
+
             if is_safe(node, color):
                 colors[node] = color
 
